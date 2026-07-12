@@ -99,3 +99,4 @@ targets:
       - Tests
       - path: PreviewExtension/MatrixMath.swift
       - path: PreviewExtension/SplatBounds.swift
+      - path: PreviewExtension/OrbitCamera.swift
