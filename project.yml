@@ -26,6 +26,8 @@ schemes:
         SPZQuickLook: all
     run:
       config: Release
+    test:
+      targets: [UnitTests]
 
 targets:
   SPZQuickLook:
@@ -86,3 +88,13 @@ targets:
         product: MetalSplatter
       - package: MetalSplatter
         product: SplatIO
+
+  UnitTests:
+    type: bundle.unit-test
+    platform: macOS
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    sources:
+      - Tests
+      - path: PreviewExtension/MatrixMath.swift
