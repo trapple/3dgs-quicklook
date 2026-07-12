@@ -31,6 +31,25 @@ final class OrbitCameraTests: XCTestCase {
         XCTAssertEqual(before, cam.viewMatrix) // クランプ済みなので変化しない
     }
 
+    func testPanMovesSceneSidewaysInViewSpace() {
+        var cam = makeCamera()
+        let before = cam.viewMatrix * SIMD4<Float>(10, 10, 10, 1)
+        cam.pan(deltaX: 100, deltaY: 0) // 指を右へ → シーンが画面右へ動く
+        let after = cam.viewMatrix * SIMD4<Float>(10, 10, 10, 1)
+        XCTAssertGreaterThan(after.x, before.x)
+        XCTAssertEqual(after.y, before.y, accuracy: 1e-4) // 横パンで縦位置は変わらない
+    }
+
+    func testPanFollowsCameraOrientation() {
+        var cam = makeCamera()
+        cam.rotate(deltaYaw: 1.2, deltaPitch: -0.4) // 回転後でも画面基準で動く
+        let before = cam.viewMatrix * SIMD4<Float>(10, 10, 10, 1)
+        cam.pan(deltaX: 100, deltaY: 0)
+        let after = cam.viewMatrix * SIMD4<Float>(10, 10, 10, 1)
+        XCTAssertGreaterThan(after.x, before.x)
+        XCTAssertEqual(after.z, before.z, accuracy: 1e-3) // 奥行きは変わらない
+    }
+
     func testZoomIsClamped() {
         var cam = makeCamera()
         for _ in 0..<1000 { cam.zoom(factor: 1.5) } // 近づき続けても下限で止まる

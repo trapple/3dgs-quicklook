@@ -16,6 +16,9 @@ final class SplatSceneRenderer: NSObject, MTKViewDelegate {
 
     var camera: OrbitCamera
 
+    /// イベント駆動描画のための再描画先。ソート完了時に needsDisplay を立てる
+    weak var redrawTarget: MTKView?
+
     init(device: MTLDevice, camera: OrbitCamera) throws {
         guard let queue = device.makeCommandQueue() else {
             throw SPZLoaderError.noGPU
@@ -32,11 +35,18 @@ final class SplatSceneRenderer: NSObject, MTKViewDelegate {
             maxSimultaneousRenders: 3
         )
         super.init()
+        // 常時 60fps で回さず、ソート完了時だけ再描画する (QL プレビューの CPU/GPU 負荷対策)
+        renderer.onSortComplete = { [weak self] _ in
+            Task { @MainActor in
+                self?.redrawTarget?.needsDisplay = true
+            }
+        }
     }
 
     func add(points: [SplatPoint]) async throws {
         let chunk = try SplatChunk(device: device, from: points)
         await renderer.addChunk(chunk)
+        redrawTarget?.needsDisplay = true
     }
 
     nonisolated func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
@@ -84,6 +94,11 @@ final class SplatSceneRenderer: NSObject, MTKViewDelegate {
         )) ?? false
         if didRender {
             commandBuffer.present(drawable)
+        } else {
+            // ソート未完了等でドロップしたフレームは少し待って再試行 (スピンさせない)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0 / 30.0) { [weak view] in
+                view?.needsDisplay = true
+            }
         }
         commandBuffer.commit()
     }

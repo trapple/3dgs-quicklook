@@ -6,7 +6,7 @@ import simd
 struct OrbitCamera {
     static let fovYRadians: Float = 65 * .pi / 180
 
-    private let center: SIMD3<Float>
+    private var center: SIMD3<Float>
     private let initialDistance: Float
     private var distance: Float
     private var yaw: Float = 0
@@ -26,16 +26,28 @@ struct OrbitCamera {
         pitch = min(max(pitch + deltaPitch, -Self.pitchLimit), Self.pitchLimit)
     }
 
+    /// 画面基準の横/縦パン。delta はスクロールのポイント数、
+    /// 移動量はズーム距離に比例させる (寄っているほど細かく動く)
+    mutating func pan(deltaX: Float, deltaY: Float) {
+        let cameraSpace = SIMD3<Float>(deltaX, -deltaY, 0) * (distance * 0.0015)
+        center -= orientation.inverse.act(cameraSpace)
+    }
+
     mutating func zoom(factor: Float) {
         guard factor > 0, factor.isFinite else { return }
-        distance = min(max(distance / factor, initialDistance * 0.05), initialDistance * 20)
+        distance = min(max(distance / factor, initialDistance * 0.02), initialDistance * 20)
+    }
+
+    /// ワールド → カメラ空間の回転 (viewMatrix の回転部と同一)
+    private var orientation: simd_quatf {
+        simd_quatf(angle: pitch, axis: SIMD3<Float>(1, 0, 0))
+            * simd_quatf(angle: yaw, axis: SIMD3<Float>(0, 1, 0))
+            * simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 0, 1))
     }
 
     var viewMatrix: simd_float4x4 {
         matrixTranslation(SIMD3<Float>(0, 0, -distance))
-            * matrixRotation(radians: pitch, axis: SIMD3<Float>(1, 0, 0))
-            * matrixRotation(radians: yaw, axis: SIMD3<Float>(0, 1, 0))
-            * matrixRotation(radians: .pi, axis: SIMD3<Float>(0, 0, 1))
+            * simd_float4x4(orientation)
             * matrixTranslation(-center)
     }
 

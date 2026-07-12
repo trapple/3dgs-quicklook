@@ -20,6 +20,10 @@ final class SplatMetalView: MTKView {
         delegate = sceneRenderer
         wantsLayer = true
         layer?.isOpaque = false
+        // 常時描画ループを止め、入力・ソート完了時のみ再描画する (CPU/GPU 負荷対策)
+        isPaused = true
+        enableSetNeedsDisplay = true
+        sceneRenderer.redrawTarget = self
         applyBackgroundColor()
     }
 
@@ -34,13 +38,33 @@ final class SplatMetalView: MTKView {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        // QL ホストは横スクロールの delta を奪うため、パンの正経路は Shift+ドラッグ / 右ドラッグ
+        if event.modifierFlags.contains(.shift) {
+            pan(deltaX: event.deltaX, deltaY: event.deltaY)
+            return
+        }
         sceneRenderer.camera.rotate(
             deltaYaw: Float(event.deltaX) * 0.01,
             deltaPitch: Float(event.deltaY) * 0.01
         )
+        needsDisplay = true
+    }
+
+    override func rightMouseDragged(with event: NSEvent) {
+        pan(deltaX: event.deltaX, deltaY: event.deltaY)
+    }
+
+    override func otherMouseDragged(with event: NSEvent) {
+        pan(deltaX: event.deltaX, deltaY: event.deltaY)
     }
 
     func zoom(magnificationDelta: CGFloat) {
         sceneRenderer.camera.zoom(factor: Float(1.0 + magnificationDelta))
+        needsDisplay = true
+    }
+
+    func pan(deltaX: CGFloat, deltaY: CGFloat) {
+        sceneRenderer.camera.pan(deltaX: Float(deltaX), deltaY: Float(deltaY))
+        needsDisplay = true
     }
 }
