@@ -2,7 +2,7 @@ APP := SPZQuickLook
 DERIVED := build
 SPZ_SAMPLE_BASE := https://raw.githubusercontent.com/nianticlabs/spz/main/samples
 
-.PHONY: gen build install test ql reset fixtures
+.PHONY: gen build install test ql reset fixtures release release-check
 
 gen:
 	xcodegen generate
@@ -30,6 +30,12 @@ ql:
 
 reset:
 	qlmanage -r && qlmanage -r cache
+
+release:
+	bash scripts/release.sh
+
+release-check:
+	bash scripts/release.sh check
 
 fixtures:
 	mkdir -p fixtures
