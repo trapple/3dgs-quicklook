@@ -22,6 +22,12 @@ sign_identity() {
     | sed -E 's/.*"(.+)".*/\1/'
 }
 
+# 証明書名の括弧内 (例: "... (38BCPZ72CZ)") から Team ID を取り出す。
+# SPM のリソースバンドル (MetalSplatter のシェーダー) の署名に DEVELOPMENT_TEAM が必要
+team_id() {
+  sign_identity | sed -E 's/.*\(([A-Z0-9]+)\)$/\1/'
+}
+
 precheck() {
   local v
   v="$(version)"
@@ -52,6 +58,7 @@ build_signed() {
   xcodebuild -project "$REPO_DIR/$APP.xcodeproj" -scheme "$APP" -configuration Release \
     -derivedDataPath "$DERIVED" \
     CODE_SIGN_IDENTITY="$identity" \
+    DEVELOPMENT_TEAM="$(team_id)" \
     ENABLE_HARDENED_RUNTIME=YES \
     OTHER_CODE_SIGN_FLAGS=--timestamp \
     CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
