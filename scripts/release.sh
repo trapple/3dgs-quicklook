@@ -58,6 +58,7 @@ build_signed() {
   xcodebuild -project "$REPO_DIR/$APP.xcodeproj" -scheme "$APP" -configuration Release \
     -derivedDataPath "$DERIVED" \
     CODE_SIGN_IDENTITY="$identity" \
+    CODE_SIGN_STYLE=Manual \
     DEVELOPMENT_TEAM="$(team_id)" \
     ENABLE_HARDENED_RUNTIME=YES \
     OTHER_CODE_SIGN_FLAGS=--timestamp \
