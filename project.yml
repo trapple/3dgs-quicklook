@@ -1,0 +1,88 @@
+name: SPZQuickLook
+options:
+  bundleIdPrefix: jp.trapple
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    # バージョンの正。リリース時はここを読む
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+packages:
+  MetalSplatter:
+    url: https://github.com/scier/MetalSplatter
+    exactVersion: 1.0.1
+
+schemes:
+  SPZQuickLook:
+    build:
+      targets:
+        SPZQuickLook: all
+    run:
+      config: Release
+
+targets:
+  SPZQuickLook:
+    type: application
+    platform: macOS
+    sources: [SPZQuickLook]
+    info:
+      path: SPZQuickLook/Info.plist
+      properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSPrincipalClass: NSApplication
+        NSMainStoryboardFile: ""
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Gaussian Splat (SPZ)
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            LSItemContentTypes: [com.nianticlabs.spz]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.nianticlabs.spz
+            UTTypeDescription: Gaussian Splat (SPZ)
+            UTTypeConformsTo: [public.data, public.3d-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [spz]
+    dependencies:
+      - target: PreviewExtension
+        embed: true
+
+  PreviewExtension:
+    type: app-extension
+    platform: macOS
+    sources: [PreviewExtension]
+    settings:
+      base:
+        # 親アプリの bundle ID をプレフィックスにしないと ValidateEmbeddedBinary で失敗する
+        PRODUCT_BUNDLE_IDENTIFIER: jp.trapple.SPZQuickLook.PreviewExtension
+    # sandbox 必須: 無いと pkd が "plug-ins must be sandboxed" で登録を拒否する
+    entitlements:
+      path: PreviewExtension/PreviewExtension.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+    info:
+      path: PreviewExtension/Info.plist
+      properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleDisplayName: SPZ Preview
+        # appex は XPC! でないと pluginkit に登録されない
+        CFBundlePackageType: "XPC!"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.preview
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).PreviewViewController"
+          NSExtensionAttributes:
+            QLSupportedContentTypes: [com.nianticlabs.spz]
+            QLSupportsSearchableItems: false
+    dependencies:
+      - package: MetalSplatter
+        product: MetalSplatter
+      - package: MetalSplatter
+        product: SplatIO
