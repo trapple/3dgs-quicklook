@@ -98,3 +98,4 @@ targets:
     sources:
       - Tests
       - path: PreviewExtension/MatrixMath.swift
+      - path: PreviewExtension/SplatBounds.swift
