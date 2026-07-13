@@ -18,6 +18,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
+        // ARC 管理 (viewerWindows 配列) と AppKit の close 時自動 release が二重解放になり
+        // クローズアニメーション中に SIGSEGV するため、自動 release を無効化する
+        window.isReleasedWhenClosed = false
         window.title = url.lastPathComponent
         window.contentViewController = ViewerViewController(url: url)
         window.delegate = self
