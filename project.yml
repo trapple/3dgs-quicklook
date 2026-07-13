@@ -11,7 +11,7 @@ settings:
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: "-"
     # バージョンの正。リリース時はここを読む
-    MARKETING_VERSION: "1.0.0"
+    MARKETING_VERSION: "1.1.0"
     CURRENT_PROJECT_VERSION: "1"
 
 packages:
@@ -33,7 +33,7 @@ targets:
   SPZQuickLook:
     type: application
     platform: macOS
-    sources: [SPZQuickLook]
+    sources: [SPZQuickLook, Shared]
     info:
       path: SPZQuickLook/Info.plist
       properties:
@@ -46,6 +46,12 @@ targets:
             CFBundleTypeRole: Viewer
             LSHandlerRank: Default
             LSItemContentTypes: [com.nianticlabs.spz]
+          # .ply はシステム宣言 UTI (public.polygon-file-format) を claim する。
+          # メッシュ .ply も本拡張が受ける (3DGS でなければ QL 標準フォールバック) — spec 参照
+          - CFBundleTypeName: Polygon File Format (3D Gaussian Splatting)
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            LSItemContentTypes: [public.polygon-file-format]
         UTImportedTypeDeclarations:
           - UTTypeIdentifier: com.nianticlabs.spz
             UTTypeDescription: Gaussian Splat (SPZ)
@@ -55,11 +61,15 @@ targets:
     dependencies:
       - target: PreviewExtension
         embed: true
+      - package: MetalSplatter
+        product: MetalSplatter
+      - package: MetalSplatter
+        product: SplatIO
 
   PreviewExtension:
     type: app-extension
     platform: macOS
-    sources: [PreviewExtension]
+    sources: [PreviewExtension, Shared]
     settings:
       base:
         # 親アプリの bundle ID をプレフィックスにしないと ValidateEmbeddedBinary で失敗する
@@ -81,7 +91,7 @@ targets:
           NSExtensionPointIdentifier: com.apple.quicklook.preview
           NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).PreviewViewController"
           NSExtensionAttributes:
-            QLSupportedContentTypes: [com.nianticlabs.spz]
+            QLSupportedContentTypes: [com.nianticlabs.spz, public.polygon-file-format]
             QLSupportsSearchableItems: false
     dependencies:
       - package: MetalSplatter
@@ -97,6 +107,6 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
     sources:
       - Tests
-      - path: PreviewExtension/MatrixMath.swift
-      - path: PreviewExtension/SplatBounds.swift
-      - path: PreviewExtension/OrbitCamera.swift
+      - path: Shared/MatrixMath.swift
+      - path: Shared/SplatBounds.swift
+      - path: Shared/OrbitCamera.swift

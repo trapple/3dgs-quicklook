@@ -62,41 +62,9 @@ class PreviewViewController: NSViewController, QLPreviewingController {
 
         Self.logger.info("preview ready: \(url.lastPathComponent, privacy: .public) points=\(result.points.count, privacy: .public)")
 
-        addBackgroundToggleButton(on: splatView)
+        splatView.installBackgroundToggle()
         if result.truncatedCount > 0 {
-            addTruncationLabel(on: splatView, count: result.truncatedCount)
+            splatView.showTruncationWarning(count: result.truncatedCount)
         }
-    }
-
-    private func addBackgroundToggleButton(on splatView: SplatMetalView) {
-        let button = NSButton(
-            image: NSImage(systemSymbolName: "circle.lefthalf.filled", accessibilityDescription: "背景色を切り替え")!,
-            target: self, action: #selector(toggleBackground(_:))
-        )
-        button.isBordered = false
-        button.toolTip = "背景色を切り替え"
-        button.translatesAutoresizingMaskIntoConstraints = false
-        splatView.addSubview(button)
-        NSLayoutConstraint.activate([
-            button.topAnchor.constraint(equalTo: splatView.topAnchor, constant: 10),
-            button.trailingAnchor.constraint(equalTo: splatView.trailingAnchor, constant: -10),
-        ])
-    }
-
-    @objc private func toggleBackground(_ sender: NSButton) {
-        splatView?.isDarkBackground.toggle()
-    }
-
-    private func addTruncationLabel(on splatView: SplatMetalView, count: Int) {
-        // 上限超過はサイレントに切り捨てず必ず可視化する (spec)
-        let label = NSTextField(labelWithString: "⚠︎ \(count.formatted()) 個のスプラットを省略")
-        label.font = .systemFont(ofSize: 11)
-        label.textColor = .systemYellow
-        label.translatesAutoresizingMaskIntoConstraints = false
-        splatView.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.topAnchor.constraint(equalTo: splatView.topAnchor, constant: 10),
-            label.leadingAnchor.constraint(equalTo: splatView.leadingAnchor, constant: 10),
-        ])
     }
 }

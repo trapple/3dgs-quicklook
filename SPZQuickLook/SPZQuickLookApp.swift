@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct SPZQuickLookApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     var body: some Scene {
         WindowGroup {
             VStack(spacing: 12) {
@@ -10,7 +12,7 @@ struct SPZQuickLookApp: App {
                     .foregroundStyle(.secondary)
                 Text("SPZ Quick Look")
                     .font(.title2)
-                Text("Finder で .spz を選んでスペースキーを押すとプレビューされます。\nこのアプリは拡張を登録するためだけに存在します。")
+                Text("Finder で .spz / .ply (3DGS) を選んでスペースキーを押すとプレビューされます。\nこのアプリは拡張を登録するためだけに存在します。")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
             }

@@ -2,12 +2,16 @@
 
 English | [日本語](README-ja.md)
 
-A macOS Quick Look extension that previews .spz (3D Gaussian Splatting) files with the spacebar in Finder.
+A macOS viewer for 3D Gaussian Splatting files:
+
+- **.spz** — Quick Look preview with the spacebar in Finder
+- **.ply (3DGS)** — standalone viewer window (double-click / Open With). The spacebar preview for .ply cannot be overridden because Apple's built-in extension claims the type
+
 Native implementation with Metal ([MetalSplatter](https://github.com/scier/MetalSplatter)) — no WebView, no auto-rotation.
 
 - Drag to orbit, pinch or two-finger vertical scroll to zoom
 - Shift+drag / right-drag (or two-finger horizontal scroll) to pan
-- Toggle dark ⇄ light background with the button in the top-right corner
+- Toggle dark ⇄ light background, flip upside-down scenes (3DGS files have no standard up-axis) with the buttons in the top-right corner
 - Broken files fall back to the standard Quick Look file info view
 
 Requires macOS 15+ on Apple Silicon.

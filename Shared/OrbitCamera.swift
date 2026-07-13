@@ -11,6 +11,9 @@ struct OrbitCamera {
     private var distance: Float
     private var yaw: Float = 0
     private var pitch: Float = 0
+    /// 3DGS データは上下軸の標準がない (COLMAP 系: Y 下向き / SuperSplat 系: Y 上向き) ため、
+    /// デフォルトの 180° 補正をトグルできるようにする
+    private var isFlipped = false
 
     private static let pitchLimit: Float = 88 * .pi / 180
 
@@ -33,16 +36,23 @@ struct OrbitCamera {
         center -= orientation.inverse.act(cameraSpace)
     }
 
+    mutating func toggleFlip() {
+        isFlipped.toggle()
+    }
+
     mutating func zoom(factor: Float) {
         guard factor > 0, factor.isFinite else { return }
         distance = min(max(distance / factor, initialDistance * 0.02), initialDistance * 20)
     }
 
-    /// ワールド → カメラ空間の回転 (viewMatrix の回転部と同一)
+    /// ワールド → カメラ空間の回転 (viewMatrix の回転部と同一)。
+    /// Z 軸 π 回転は一般的な 3DGS データ (Y 下向き) を正立させる補正
+    /// (MetalSplatter SampleApp の commonUpCalibration)。isFlipped でオフにできる
     private var orientation: simd_quatf {
-        simd_quatf(angle: pitch, axis: SIMD3<Float>(1, 0, 0))
+        let calibration = simd_quatf(angle: isFlipped ? 0 : .pi, axis: SIMD3<Float>(0, 0, 1))
+        return simd_quatf(angle: pitch, axis: SIMD3<Float>(1, 0, 0))
             * simd_quatf(angle: yaw, axis: SIMD3<Float>(0, 1, 0))
-            * simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 0, 1))
+            * calibration
     }
 
     var viewMatrix: simd_float4x4 {

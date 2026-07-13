@@ -11,9 +11,14 @@
 
 ## 要件
 
-- 対応形式: **.spz のみ** (.ply / .splat / .ksplat はスコープ外)
+- 対応形式: **.spz (QL プレビュー) と 3DGS .ply (ホストアプリ内ビューア)** (.splat / .ksplat / .sog はスコープ外)
+  - .ply は 2026-07-13 に追加 (v1.1.0)。パーサは SplatIO の PLY リーダーをそのまま使う
+  - **.ply の QL スペースキープレビューは実現不可** (実測 + 既知の OS 制限): .ply の UTI `public.polygon-file-format` は Apple のシステム拡張 (HydraQLPreviewExtension) が claim しており、第三者 QL 拡張では上書きできない。`LSHandlerRank: Default`・デフォルトハンドラ変更 (duti) でも選ばれないことを実測確認済み
+  - 代替として **ホストアプリ SPZQuickLook.app をビューア化**: .ply / .spz のダブルクリック (デフォルトハンドラ登録済み) で同じ Metal ビューアのウィンドウが開く。ifc-quicklook の単体ビューア内蔵と同じ形
+  - `QLSupportedContentTypes` の `public.polygon-file-format` claim は残す (現状は Apple が勝つため不活性だが、将来 OS 側が claim をやめた場合に有効になる)
 - スコープ: **プレビューのみ** (Finder サムネイル拡張は作らない)
-- 機能: カメラ操作 (ドラッグ回転 + ズーム + 二本指横スクロールでパン) と背景色切替のみ
+- 機能: カメラ操作 (ドラッグ回転 + ズーム + 二本指横スクロールでパン) と背景色切替、**上下反転ボタン**
+  - 上下反転が必要な理由: 3DGS データに上下軸の標準がない。COLMAP 系学習出力は Y 下向き (デフォルト補正で正立)、SuperSplat/Luma 系エクスポートは Y 上向き (補正で逆さになる)。自動判別は不可能なのでワンボタンで反転できるようにする
 - **自動回転なし**。アニメーション (動的スプラット列) なし
 - 配布: 自分用 (公証不要、対応 OS 下限は開発機の macOS でよい)
 
@@ -37,13 +42,17 @@
 Quick Look 拡張は単体配布できないため「ホストアプリ + 拡張」の 2 ターゲット構成 (既存 2 プロジェクトと同じ)。
 
 ```
-SPZQuickLook.app (ホスト。ほぼ空。/Applications に置いて拡張を登録するだけ)
+SPZQuickLook.app (ホスト。拡張の登録 + .ply/.spz の単体ビューア)
+├── AppDelegate / ViewerViewController … ダブルクリックで開いた .ply/.spz を Shared のビューアで表示
+├── Shared/ (app と appex の両方でコンパイル)
+│   ├── SplatMetalView         … MTKView + MetalSplatter SplatRenderer + 背景切替ボタン
+│   ├── SplatSceneRenderer     … MTKViewDelegate。SplatRenderer に viewport を渡して描画
+│   ├── OrbitCamera            … 自作オービットカメラ (ドラッグ回転 + ズーム + パン)
+│   ├── SPZLoader              … SplatIO で .spz/.ply をデコード + bbox 計算
+│   └── MatrixMath / SplatBounds
 └── PreviewExtension.appex (com.apple.quicklook.preview)
-    ├── PreviewViewController  … QLPreviewingController 実装。入口
-    ├── SplatMetalView         … MTKView + MetalSplatter SplatRenderer + 背景切替ボタン
-    ├── OrbitCamera            … 自作オービットカメラ (ドラッグ回転 + ズーム、view/projection 行列を生成)
-    ├── SPZLoader              … SplatIO で .spz をデコードし SplatRenderer に流し込む + bbox 計算
-    └── MetalSplatter (SPM 依存: MetalSplatter + SplatIO プロダクト)
+    └── PreviewViewController  … QLPreviewingController 実装。入口
+※ MetalSplatter (SPM: MetalSplatter + SplatIO) は両ターゲットにリンク
 ```
 
 - **PreviewViewController**: `preparePreviewOfFile(at:)` で URL を受け取り、SPZLoader でロード → SplatMetalView を載せる薄い層。マウスドラッグ / スクロール / ピンチのイベントは AppKit で直接拾う (QL ホスト内では SwiftUI ジェスチャにピンチ/スクロールが配送されない glb-quicklook の知見)
@@ -108,7 +117,7 @@ SPZQuickLook.app (ホスト。ほぼ空。/Applications に置いて拡張を登
 
 - **RealityKit `GaussianSplatComponent` への乗り換え (積極検討)**: macOS 27 正式リリース + Xcode 27 GA が揃ったら、描画層を MetalSplatter から Apple ネイティブ API に乗り換えることをぜひ試したい。SplatIO/spz-swift のデコード結果 (position/scale/rotation/opacity/SH) を `GaussianSplatResource.BufferResource` (LowLevelBuffer + BufferDescriptor) に流し込む形で、パーサ層はそのまま流用できる見込み。WWDC26「Explore advances in RealityKit」参照。SPZLoader を描画層から分離しておくのはこの乗り換えを見据えた設計判断
 - Finder サムネイル拡張
-- .ply / .splat / .ksplat 対応 (SplatIO 自体は対応しているため、UTI 宣言追加だけで対応できる可能性が高い)
+- .splat / .ksplat / .sog 対応 (.splat は SplatIO 対応済みなので UTI 追加だけで可能。.sog は SplatIO の対応待ち)
 - SPZ 4 等の将来フォーマットバージョンの完全対応 (読めれば良い。書き込み系は対象外)
 - アニメーション (動的スプラット列) 対応
 - Developer ID 署名 + 公証、Homebrew cask 等の配布整備 (glb-quicklook の配布整備 spec と同様、別フェーズで検討)

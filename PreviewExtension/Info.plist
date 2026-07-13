@@ -27,6 +27,7 @@
 			<key>QLSupportedContentTypes</key>
 			<array>
 				<string>com.nianticlabs.spz</string>
+				<string>public.polygon-file-format</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>
 			<false/>

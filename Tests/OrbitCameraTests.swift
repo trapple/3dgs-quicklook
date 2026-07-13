@@ -50,6 +50,18 @@ final class OrbitCameraTests: XCTestCase {
         XCTAssertEqual(after.z, before.z, accuracy: 1e-3) // 奥行きは変わらない
     }
 
+    func testToggleFlipInvertsVertical() {
+        var cam = makeCamera()
+        let above = SIMD4<Float>(10, 11, 10, 1) // 中心の 1 上
+        let before = cam.viewMatrix * above
+        cam.toggleFlip()
+        let after = cam.viewMatrix * above
+        XCTAssertEqual(after.y, -before.y, accuracy: 1e-4) // 上下が反転する
+        cam.toggleFlip()
+        let restored = cam.viewMatrix * above
+        XCTAssertEqual(restored.y, before.y, accuracy: 1e-4) // 再度押すと元に戻る
+    }
+
     func testZoomIsClamped() {
         var cam = makeCamera()
         for _ in 0..<1000 { cam.zoom(factor: 1.5) } // 近づき続けても下限で止まる

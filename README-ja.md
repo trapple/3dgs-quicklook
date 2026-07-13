@@ -2,12 +2,16 @@
 
 [English](README.md) | 日本語
 
-Finder で .spz (3D Gaussian Splatting) ファイルをスペースキーでプレビューできる macOS Quick Look 拡張です。
+3D Gaussian Splatting ファイルの macOS ビューアです:
+
+- **.spz** — Finder のスペースキーで Quick Look プレビュー
+- **.ply (3DGS)** — 単体ビューアウィンドウ (ダブルクリック / このアプリケーションで開く)。.ply のスペースキープレビューは Apple 内蔵拡張が UTI を握っているため上書きできません (OS 仕様)
+
 Metal ([MetalSplatter](https://github.com/scier/MetalSplatter)) によるネイティブ実装 — WebView なし、自動回転なし。
 
 - ドラッグで回転、ピンチまたは二本指の縦スクロールでズーム
 - Shift+ドラッグ / 右ドラッグ (または二本指の横スクロール) でパン
-- 右上のボタンで背景をダーク ⇄ ライト切替
+- 右上のボタンで背景ダーク ⇄ ライト切替と上下反転 (3DGS には上下軸の標準がないため)
 - 壊れたファイルは Quick Look 標準のファイル情報表示にフォールバック
 
 macOS 15 以降・Apple Silicon 専用。
