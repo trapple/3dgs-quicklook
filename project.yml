@@ -11,7 +11,7 @@ settings:
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: "-"
     # バージョンの正。リリース時はここを読む
-    MARKETING_VERSION: "1.1.0"
+    MARKETING_VERSION: "1.2.0"
     CURRENT_PROJECT_VERSION: "1"
 
 packages:
@@ -24,6 +24,7 @@ schemes:
     build:
       targets:
         SPZQuickLook: all
+        ply2spz: all
     run:
       config: Release
     test:
@@ -96,6 +97,16 @@ targets:
     dependencies:
       - package: MetalSplatter
         product: MetalSplatter
+      - package: MetalSplatter
+        product: SplatIO
+
+  # .ply/.splat → .spz 変換 CLI。app の Contents/Helpers に同梱する
+  # (コピーと再署名は Makefile / release.sh が行う)
+  ply2spz:
+    type: tool
+    platform: macOS
+    sources: [CLI]
+    dependencies:
       - package: MetalSplatter
         product: SplatIO
 

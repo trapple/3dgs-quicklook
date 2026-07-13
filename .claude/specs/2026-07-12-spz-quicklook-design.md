@@ -113,6 +113,15 @@ SPZQuickLook.app (ホスト。拡張の登録 + .ply/.spz の単体ビューア)
 4. 勝手に回転しない
 5. 不正な .spz でクラッシュせず標準フォールバックする
 
+## ply2spz CLI (2026-07-13 追加、v1.2.0)
+
+.ply の QL スペースキープレビューが OS 制限で不可能なため、spz へ変換して QL に寄せる導線として変換 CLI を同梱する。
+
+- 自前の小ターゲット `ply2spz` (SplatIO 利用、追加依存なし)。MetalSplatter 同梱の SplatConverter は流用しない (署名パイプライン統合と UX 簡素化のため)
+- 使い方: `ply2spz <input.(ply|splat|spz)> [output.spz]`。出力省略時は入力の拡張子を .spz に差し替え。既存ファイルは `-f` なしでは上書きしない (Fail Fast)
+- 配布: app バンドル内 `Contents/Helpers/ply2spz` に同梱 (アプリと一緒に署名・公証)。Homebrew cask の `binary` stanza で PATH にリンク
+- ビルド統合: Makefile / release.sh が xcodebuild 後に Helpers へコピーし、アプリを再署名する
+
 ## スコープ外 (将来の拡張候補)
 
 - **RealityKit `GaussianSplatComponent` への乗り換え (積極検討)**: macOS 27 正式リリース + Xcode 27 GA が揃ったら、描画層を MetalSplatter から Apple ネイティブ API に乗り換えることをぜひ試したい。SplatIO/spz-swift のデコード結果 (position/scale/rotation/opacity/SH) を `GaussianSplatResource.BufferResource` (LowLevelBuffer + BufferDescriptor) に流し込む形で、パーサ層はそのまま流用できる見込み。WWDC26「Explore advances in RealityKit」参照。SPZLoader を描画層から分離しておくのはこの乗り換えを見据えた設計判断

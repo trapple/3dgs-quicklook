@@ -23,6 +23,18 @@ brew install trapple/tap/3dgs-quicklook
 open /Applications/SPZQuickLook.app   # first time only: registers the Quick Look extension
 ```
 
+## ply2spz CLI
+
+Convert 3DGS .ply (or .splat) to .spz — enables the spacebar preview and shrinks files ~10x:
+
+```bash
+ply2spz input.ply                    # writes input.spz next to it
+ply2spz input.ply ~/Desktop/out.spz  # explicit output
+ply2spz input.ply -f                 # overwrite existing output
+```
+
+Installed to your PATH by Homebrew (bundled inside the app at `Contents/Helpers/ply2spz`).
+
 ## Build from source
 
 Requirements: Xcode / xcodegen (`brew install xcodegen`)

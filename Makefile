@@ -7,9 +7,16 @@ SPZ_SAMPLE_BASE := https://raw.githubusercontent.com/nianticlabs/spz/main/sample
 gen:
 	xcodegen generate
 
+APP_PATH := $(DERIVED)/Build/Products/Release/$(APP).app
+
 build: gen
 	xcodebuild -project $(APP).xcodeproj -scheme $(APP) -configuration Release \
 		-derivedDataPath $(DERIVED) build
+	# ply2spz を Helpers に同梱 (バンドル変更でシールが壊れるため ad-hoc 再署名)
+	mkdir -p $(APP_PATH)/Contents/Helpers
+	ditto $(DERIVED)/Build/Products/Release/ply2spz $(APP_PATH)/Contents/Helpers/ply2spz
+	codesign -f -s - $(APP_PATH)/Contents/Helpers/ply2spz
+	codesign -f -s - $(APP_PATH)
 
 LSREGISTER := /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister
 

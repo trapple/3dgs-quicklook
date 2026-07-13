@@ -64,6 +64,15 @@ build_signed() {
     OTHER_CODE_SIGN_FLAGS=--timestamp \
     CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
     clean build
+
+  # ply2spz を Helpers に同梱。バンドル変更で app のシールが壊れるため、
+  # ヘルパー → app の順で Developer ID 再署名する (appex のネスト署名は不変)
+  local app_path="$DERIVED/Build/Products/Release/$APP.app"
+  mkdir -p "$app_path/Contents/Helpers"
+  ditto "$DERIVED/Build/Products/Release/ply2spz" "$app_path/Contents/Helpers/ply2spz"
+  codesign -f -s "$identity" --timestamp -o runtime "$app_path/Contents/Helpers/ply2spz"
+  codesign -f -s "$identity" --timestamp -o runtime \
+    --preserve-metadata=entitlements,requirements,flags "$app_path"
 }
 
 notarize_and_staple() {
