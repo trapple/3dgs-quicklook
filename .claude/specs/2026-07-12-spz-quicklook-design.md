@@ -113,6 +113,16 @@ SPZQuickLook.app (ホスト。拡張の登録 + .ply/.spz の単体ビューア)
 4. 勝手に回転しない
 5. 不正な .spz でクラッシュせず標準フォールバックする
 
+## QL プレビューの入力制約 (2026-07-13 追記: 「ドラッグ回転が効かない」対策。ifc-quicklook で確立した知見の移植)
+
+- **ドラッグは NSPanGestureRecognizer で受けること (最終解)**。生の mouseDown/mouseDragged は QL ホストとの相性が表示面ごとに異なり信頼できない:
+  - スペースキーパネル: 生イベントはビューに届くが **NSEvent の deltaX/deltaY が 0 に潰される** → delta 頼みの回転は無反応
+  - Finder プレビュー欄: 生イベントはプロセスには届くが、ホスト側機構 (ファイルドラッグ判定等) に消費されて**ビューの override まで届かない**
+  - レコグナイザはホストとのイベント調停に乗るため両面で機能し、`translation(in:)` はデルタ潰しの影響も受けない (Apple 純正 usdz プレビューと同方式)。差分は `setTranslation(.zero)` でリセットし、AppKit 座標は Y 上向きなので dy は反転する。右ドラッグのパンは `buttonMask` 指定の別レコグナイザ。`acceptsFirstMouse(for:) = true` と `acceptsFirstResponder = true` も付ける
+- スクロール (scrollingDeltaY) とピンチ (magnification) はどの面でも潰されず届く (ズームだけ効いていた理由)
+- **appex の NSLog / os_log は `log show` で観測できない**。appex 内のデバッグはコンテナ tmp (NSTemporaryDirectory) へのファイル追記で行う
+- 合成 CGEvent はスペースキーパネルには効くが、Finder プレビュー欄では実マウスと挙動が異なり**偽陰性を出す**。欄の最終確認は実マウスでしか出来ない
+
 ## ply2spz CLI (2026-07-13 追加、v1.2.0)
 
 .ply の QL スペースキープレビューが OS 制限で不可能なため、spz へ変換して QL に寄せる導線として変換 CLI を同梱する。

@@ -41,25 +41,51 @@ final class SplatMetalView: MTKView {
             : CGColor(red: 0xd9 / 255.0, green: 0xd9 / 255.0, blue: 0xd9 / 255.0, alpha: 1)
     }
 
-    override func mouseDragged(with event: NSEvent) {
-        // QL ホストは横スクロールの delta を奪うため、パンの正経路は Shift+ドラッグ / 右ドラッグ
-        if event.modifierFlags.contains(.shift) {
-            pan(deltaX: event.deltaX, deltaY: event.deltaY)
-            return
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override var acceptsFirstResponder: Bool { true }
+
+    // ドラッグは NSPanGestureRecognizer で受ける (ifc-quicklook で確立した最終解)。理由:
+    // - QL のリモートビュー転送 (ViewBridge) は生の mouseDown/mouseDragged を表示面ごとに
+    //   違う形で殺す: スペースキーパネルでは NSEvent の deltaX/deltaY が 0 に潰され、
+    //   Finder プレビュー欄ではホスト側機構に消費されて override まで届かない。
+    // - レコグナイザはホストとのイベント調停に乗るため両面で機能し、translation(in:) は
+    //   デルタ潰しの影響も受けない (Apple 純正 usdz プレビューと同方式)。
+    private var gesturesInstalled = false
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard !gesturesInstalled, window != nil else { return }
+        gesturesInstalled = true
+        let pan = NSPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        addGestureRecognizer(pan)
+        let rightPan = NSPanGestureRecognizer(target: self, action: #selector(handleRightPan(_:)))
+        rightPan.buttonMask = 0x6 // 右 + 中ボタン
+        addGestureRecognizer(rightPan)
+    }
+
+    /// 差分を取り出してリセット (AppKit 座標は Y 上向き → 下向き正へ反転)
+    private func consumeTranslation(_ g: NSPanGestureRecognizer) -> (CGFloat, CGFloat) {
+        let t = g.translation(in: self)
+        g.setTranslation(.zero, in: self)
+        return (t.x, -t.y)
+    }
+
+    @objc private func handlePan(_ g: NSPanGestureRecognizer) {
+        let (dx, dy) = consumeTranslation(g)
+        if NSEvent.modifierFlags.contains(.shift) {
+            pan(deltaX: dx, deltaY: dy)
+        } else {
+            sceneRenderer.camera.rotate(
+                deltaYaw: Float(dx) * 0.01,
+                deltaPitch: Float(dy) * 0.01
+            )
+            needsDisplay = true
         }
-        sceneRenderer.camera.rotate(
-            deltaYaw: Float(event.deltaX) * 0.01,
-            deltaPitch: Float(event.deltaY) * 0.01
-        )
-        needsDisplay = true
     }
 
-    override func rightMouseDragged(with event: NSEvent) {
-        pan(deltaX: event.deltaX, deltaY: event.deltaY)
-    }
-
-    override func otherMouseDragged(with event: NSEvent) {
-        pan(deltaX: event.deltaX, deltaY: event.deltaY)
+    @objc private func handleRightPan(_ g: NSPanGestureRecognizer) {
+        let (dx, dy) = consumeTranslation(g)
+        pan(deltaX: dx, deltaY: dy)
     }
 
     func zoom(magnificationDelta: CGFloat) {
