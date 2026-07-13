@@ -5,7 +5,7 @@
 3D Gaussian Splatting ファイルの macOS ビューアです:
 
 - **.spz** — Finder のスペースキーで Quick Look プレビュー
-- **.ply (3DGS)** — 単体ビューアウィンドウ (ダブルクリック / このアプリケーションで開く)。.ply のスペースキープレビューは Apple 内蔵拡張が UTI を握っているため上書きできません (OS 仕様)
+- **.ply (3DGS)** — 単体ビューアウィンドウ (ダブルクリック / このアプリケーションで開く)。.ply のスペースキープレビューは Apple の Preview/Hydra 系システムハンドラが優先され、同じ UTI を第三者 QL 拡張に登録しても選択されないことを macOS 26.4 で実機確認しています (この優先順位は Apple の公開仕様には明記されていません)
 
 Metal ([MetalSplatter](https://github.com/scier/MetalSplatter)) によるネイティブ実装 — WebView なし、自動回転なし。
 

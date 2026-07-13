@@ -5,7 +5,7 @@ English | [日本語](README-ja.md)
 A macOS viewer for 3D Gaussian Splatting files:
 
 - **.spz** — Quick Look preview with the spacebar in Finder
-- **.ply (3DGS)** — standalone viewer window (double-click / Open With). The spacebar preview for .ply cannot be overridden because Apple's built-in extension claims the type
+- **.ply (3DGS)** — standalone viewer window (double-click / Open With). The spacebar preview stays with Apple's Preview/Hydra system handler: registering the same UTI from a third-party Quick Look extension is not selected (verified on macOS 26.4; this priority is not documented in Apple's public APIs)
 
 Native implementation with Metal ([MetalSplatter](https://github.com/scier/MetalSplatter)) — no WebView, no auto-rotation.
 

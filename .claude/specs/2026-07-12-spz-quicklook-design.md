@@ -13,7 +13,7 @@
 
 - 対応形式: **.spz (QL プレビュー) と 3DGS .ply (ホストアプリ内ビューア)** (.splat / .ksplat / .sog はスコープ外)
   - .ply は 2026-07-13 に追加 (v1.1.0)。パーサは SplatIO の PLY リーダーをそのまま使う
-  - **.ply の QL スペースキープレビューは実現不可** (実測 + 既知の OS 制限): .ply の UTI `public.polygon-file-format` は Apple のシステム拡張 (HydraQLPreviewExtension) が claim しており、第三者 QL 拡張では上書きできない。`LSHandlerRank: Default`・デフォルトハンドラ変更 (duti) でも選ばれないことを実測確認済み
+  - **.ply の QL スペースキープレビューは実現不可** (macOS 26.4 実測): .ply の UTI `public.polygon-file-format` は Apple の Preview/Hydra 系システムハンドラが処理する (プレビュー時に HydraQLPreviewExtension プロセスの起動を本機で確認。Preview.app の Info.plist も同 UTI を `LSIsAppleDefaultForType: true` で登録)。同じ UTI を第三者 QL 拡張で claim すること自体は可能だが、`LSHandlerRank: Default`・デフォルトハンドラ変更 (duti) を行ってもディスパッチされないことを実測確認済み。**この優先順位は Apple の公開 API 仕様には明記されていない (empirical)** — 将来の OS で変わる可能性はある
   - 代替として **ホストアプリ SPZQuickLook.app をビューア化**: .ply / .spz のダブルクリック (デフォルトハンドラ登録済み) で同じ Metal ビューアのウィンドウが開く。ifc-quicklook の単体ビューア内蔵と同じ形
   - `QLSupportedContentTypes` の `public.polygon-file-format` claim は残す (現状は Apple が勝つため不活性だが、将来 OS 側が claim をやめた場合に有効になる)
 - スコープ: **プレビューのみ** (Finder サムネイル拡張は作らない)
