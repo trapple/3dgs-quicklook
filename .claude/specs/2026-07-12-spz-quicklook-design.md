@@ -119,6 +119,8 @@ SPZQuickLook.app (ホスト。拡張の登録 + .ply/.spz の単体ビューア)
   - スペースキーパネル: 生イベントはビューに届くが **NSEvent の deltaX/deltaY が 0 に潰される** → delta 頼みの回転は無反応
   - Finder プレビュー欄: 生イベントはプロセスには届くが、ホスト側機構 (ファイルドラッグ判定等) に消費されて**ビューの override まで届かない**
   - レコグナイザはホストとのイベント調停に乗るため両面で機能し、`translation(in:)` はデルタ潰しの影響も受けない (Apple 純正 usdz プレビューと同方式)。差分は `setTranslation(.zero)` でリセットし、AppKit 座標は Y 上向きなので dy は反転する。右ドラッグのパンは `buttonMask` 指定の別レコグナイザ。`acceptsFirstMouse(for:) = true` と `acceptsFirstResponder = true` も付ける
+- **右/中ボタンは逆にレコグナイザが使えない**: `buttonMask` 指定の NSPanGestureRecognizer は QL スペースキーパネルでは一切発火しない (本リポジトリでも実測: コントロール差分 0 / 右ドラッグ合成 60pt・180pt とも画面差分 0)。一方、右ボタンの生イベント (rightMouseDown/rightMouseDragged) はパネルでもビューまで届く (左と違いホストに食われない。ただし deltaX/deltaY は例によって 0 に潰されるため locationInWindow の位置差分で計算する)。つまり**「左ドラッグ = レコグナイザ / 右(中)ドラッグ = 生イベント + 位置差分」のハイブリッドが全表示面で動く正解構成** (ifc-quicklook cbd1302 で確立)
+- Finder プレビュー欄では右ボタンイベント自体が届かないため、**欄でのパンは Shift+ドラッグ (左レコグナイザ経由) を代替手段とする**
 - スクロール (scrollingDeltaY) とピンチ (magnification) はどの面でも潰されず届く (ズームだけ効いていた理由)
 - **appex の NSLog / os_log は `log show` で観測できない**。appex 内のデバッグはコンテナ tmp (NSTemporaryDirectory) へのファイル追記で行う
 - 合成 CGEvent はスペースキーパネルには効くが、Finder プレビュー欄では実マウスと挙動が異なり**偽陰性を出す**。欄の最終確認は実マウスでしか出来ない

@@ -58,9 +58,8 @@ final class SplatMetalView: MTKView {
         gesturesInstalled = true
         let pan = NSPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         addGestureRecognizer(pan)
-        let rightPan = NSPanGestureRecognizer(target: self, action: #selector(handleRightPan(_:)))
-        rightPan.buttonMask = 0x6 // 右 + 中ボタン
-        addGestureRecognizer(rightPan)
+        // 注意: 右/中ボタンを buttonMask 指定のレコグナイザで受ける構成は QL パネルでは
+        // 一切発火しない (実測)。右(中)ドラッグは生イベント + 位置差分で処理する (下記)
     }
 
     /// 差分を取り出してリセット (AppKit 座標は Y 上向き → 下向き正へ反転)
@@ -83,9 +82,39 @@ final class SplatMetalView: MTKView {
         }
     }
 
-    @objc private func handleRightPan(_ g: NSPanGestureRecognizer) {
-        let (dx, dy) = consumeTranslation(g)
-        pan(deltaX: dx, deltaY: dy)
+    // 右 (2 本指クリック) / 中ボタンドラッグのパン。
+    // レコグナイザ (buttonMask) は QL パネルで発火しないため生イベントで受ける。
+    // 生イベントの右/中ボタン系はパネルでもビューまで届く (左と違いホストに食われない) が、
+    // deltaX/deltaY は例によって 0 に潰されるため locationInWindow の位置差分で計算する。
+    // Finder プレビュー欄では右イベント自体が届かないため、欄でのパンは Shift+ドラッグを使う
+    private var lastPanDragLocation: NSPoint?
+
+    private func panByLocationDelta(_ event: NSEvent) {
+        let loc = event.locationInWindow
+        if let last = lastPanDragLocation {
+            // AppKit 座標は Y 上向き → 下向き正へ反転
+            pan(deltaX: loc.x - last.x, deltaY: last.y - loc.y)
+        }
+        lastPanDragLocation = loc
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        lastPanDragLocation = event.locationInWindow
+    }
+    override func rightMouseDragged(with event: NSEvent) {
+        panByLocationDelta(event)
+    }
+    override func rightMouseUp(with event: NSEvent) {
+        lastPanDragLocation = nil
+    }
+    override func otherMouseDown(with event: NSEvent) {
+        lastPanDragLocation = event.locationInWindow
+    }
+    override func otherMouseDragged(with event: NSEvent) {
+        panByLocationDelta(event)
+    }
+    override func otherMouseUp(with event: NSEvent) {
+        lastPanDragLocation = nil
     }
 
     func zoom(magnificationDelta: CGFloat) {
