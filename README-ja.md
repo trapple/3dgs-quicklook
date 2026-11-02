@@ -23,6 +23,14 @@ brew install trapple/tap/3dgs-quicklook
 open /Applications/SPZQuickLook.app   # 初回のみ: Quick Look 拡張が登録されます
 ```
 
+### macOS アップデート後にプレビューが出なくなった場合
+
+macOS のメジャー/マイナーアップデートで Quick Look 拡張の登録とアプリの起動許可がリセットされることがあります (macOS 27.2 で確認)。
+
+1. `open /Applications/SPZQuickLook.app` でアプリを一度起動して拡張を再登録する
+2. 「Apple は検証できませんでした」と表示されたら「完了」を押し (「ゴミ箱に入れる」は押さない)、システム設定 › プライバシーとセキュリティ で「このまま開く」を選ぶ。アプリは公証済みです
+3. それでも出なければ `killall Finder`
+
 ## ply2spz CLI
 
 3DGS の .ply (や .splat) を .spz に変換します — スペースキープレビューが効くようになり、サイズも約 1/10 になります:
